@@ -3,35 +3,38 @@
 
 int main()
 {
-    char cur;
-    cur = fgetc(stdin);
-    pnode* head = NULL;
-    while (cur != EOF)
+    char* cur;
+    cur = read_next_input();
+    char cmd = get_cmd(cur);
+    pnode* p=NULL;
+    while (cmd != 'Z')
     {
-        if (cur=='A')
+        if (cmd=='A')
         {
-            if (head!=NULL)
+            if (p!=NULL)
             {
-                deleteGraph_cmd(head);
+                deleteGraph_cmd(p);
             }
-            build_graph_cmd(head);
+            cmd = build_graph_cmd(p);
+            printGraph_cmd(*p);
 
         }
-        if (cur=='B')
+        if (cmd=='B')
         {
-            insert_node_cmd(head);
+            cmd = insert_node_cmd(p);
         }
-        if (cur=='D')
+        if (cmd=='D')
         {
-            delete_node_cmd(head);
+            delete_node_cmd(p);
+            cmd = get_cmd(read_next_input());
         }
-        if (cur=='S')
+        if (cmd=='S')
         {
-            shortsPath_cmd(head);
+            shortsPath_cmd(*p);
         }
-        if (cur=='T')
+        if (cmd=='T')
         {
-            TSP_cmd(head);
+            TSP_cmd(*p);
         }
         
         
