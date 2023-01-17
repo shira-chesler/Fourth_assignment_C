@@ -448,7 +448,6 @@ void remove_from_q(pqueue *head_of_queue,int placement_in_queue)
     
 }
 
-
 void insert_to_priority_q(pqueue *head_of_q, pnode node_to_insert)
 {
     pqueue* cur = head_of_q;
