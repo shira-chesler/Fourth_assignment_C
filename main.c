@@ -17,18 +17,18 @@ int main()
                 deleteGraph_cmd(&p);
             }
             cmd = build_graph_cmd(&p);
-            printGraph_cmd(p);
+            //printGraph_cmd(p);
         }
         if (cmd=='B')
         {
             cmd = insert_node_cmd(&p);
-            printGraph_cmd(p);
+            //printGraph_cmd(p);
         }
         if (cmd=='D')
         {
             delete_node_cmd(&p);
             cmd = get_cmd(read_next_input());
-            printGraph_cmd(p);
+            //printGraph_cmd(p);
         }
         if (cmd=='S')
         {
@@ -48,9 +48,10 @@ int main()
         if (cmd=='T')
         {
             TSP_cmd(p);
+            cmd = get_cmd(read_next_input());
         }
         
-        
+        //printf("%c\n",cmd);
         
     }
     

@@ -87,18 +87,18 @@ int read_int(char* str)
     return x;
 }
 
-int exists(pnode *head, int node)
+int exists(pnode head, int node)
 {
-    pnode* cur_node = head;
+    pnode cur_node = head;
     int i = 1;
-    while ((*cur_node))
+    while (cur_node)
     {
-        if ((*cur_node)->node_num==node)
+        if (cur_node->node_num==node)
         {
             return i;
         }
         i++;
-        cur_node = &((*cur_node)->next);
+        cur_node = cur_node->next;
         
     }
     return 0;
@@ -116,7 +116,7 @@ void create_node(pnode *head, int node_num)
     {
         printf("error occured while malloc");
     }
-    
+    to_node->next = NULL;
     to_node->node_num = node_num;
     to_node->edges = NULL;
     to_node->Dijkstra_distance = __INT_MAX__;
@@ -140,14 +140,14 @@ pnode find_node(pnode *head, int node_num)
 
 char* insert_new_node(pnode *head, int node_num)
 {
-    pnode* cur_node = head;
-    if (exists(head,node_num))
+    pnode cur_node = *head;
+    if (exists(*head,node_num))
     {
         return insert_edges(find_node(head,node_num), head);
     }
-    while ((*cur_node)!=NULL && (*cur_node)->next)
+    while (cur_node!=NULL && cur_node->next)
     {
-        cur_node = &((*cur_node)->next);
+        cur_node = cur_node->next;
     }
     pnode new_node = (pnode)malloc(sizeof(node));
     if (!new_node)
@@ -157,13 +157,13 @@ char* insert_new_node(pnode *head, int node_num)
     new_node->node_num = node_num;
     new_node->next=NULL;
     new_node->Dijkstra_distance = __INT_MAX__;
-    if (*cur_node==NULL)
+    if (*head==NULL)
     {
-        *cur_node = new_node;
+        *head = new_node;
     }
     else
     {
-        (*cur_node)->next = new_node;
+        cur_node->next = new_node;
     }
     return insert_edges(new_node, head);
     
@@ -232,7 +232,7 @@ char* insert_edges(pnode node, pnode *head)
                 }
                 new_edge->next=NULL;
                 new_edge->weight = weight;
-                if (!exists(head, other_node)) 
+                if (!exists(*head, other_node)) 
                 {
                     create_node(head, other_node); 
                 }
@@ -249,7 +249,7 @@ char* insert_edges(pnode node, pnode *head)
                 }
                 new_edge->next=NULL;
                 new_edge->weight = weight;
-                if (!exists(head, other_node)) 
+                if (!exists(*head, other_node)) 
                 {
                     create_node(head, other_node);
                 }
@@ -266,7 +266,7 @@ char* insert_edges(pnode node, pnode *head)
 char insert_node_cmd(pnode *head)
 {
     int node_value = read_int(read_next_input());
-    if (exists(head, node_value))
+    if (exists(*head, node_value))
     {
         pnode nodepointer = find_node(head, node_value);
         del_edges(nodepointer->edges);
@@ -310,7 +310,7 @@ void delete_edge_to_node(pnode node, int node_num_to_delete_edge_to)
 void delete_node_cmd(pnode *head)
 {
     int value = read_int(read_next_input());
-    int placement_in_graph = exists(head, value);
+    int placement_in_graph = exists(*head, value);
     pnode cur = *head;
     while (cur)
     {
@@ -544,23 +544,82 @@ int shortsPath_cmd(pnode head, int source, int destination)
     return dijkstra_of_dest;    
 }
 
+int factorial(int n)
+{
+    if (n==0)
+    {
+        return 1;
+    }
+    else
+    {
+        return n*factorial(n-1);
+    }
+}
+
+void create_permutations_rec(int *nums, int start, int end, int **permutations, int *permute_num)
+{
+    if (start==end)
+    {
+        for(int i=0; i<=end; i++)
+        {
+            permutations[*permute_num][i] = nums[i];
+        }
+        (*permute_num)++;
+    }
+    else
+    {
+        for (int i = start; i <=end; i++)
+        {
+            int tmp = nums[start];
+            nums[start] = nums[i];
+            nums[i] = tmp;
+            create_permutations_rec(nums, start+1, end, permutations, permute_num);
+            tmp = nums[start];
+            nums[start] = nums[i];
+            nums[i] = tmp;
+        }
+        
+    }
+}
+
+int find_index(int to_find, int *arr, int size_of_arr)
+{
+    for (int i = 0; i < size_of_arr; i++)
+    {
+        if (arr[i]==to_find)
+        {
+            return i+1;
+        }
+        
+    }
+    return -1;
+}
+
 void TSP_cmd(pnode head)
 {
     int k = read_int(read_next_input());
     int **n_matrix = (int**) calloc(k+1, sizeof(int*));
+    if (!n_matrix)
+    {
+       printf("error while calloc");
+    }
     for (int i = 0; i < k+1; i++)
     {
         n_matrix[i] = (int*) calloc((k+1),sizeof(int));
+        if (!n_matrix[i])
+        {
+            printf("error while calloc");
+        }
     }
     for (int i = 1; i < k+1; i++)
     {
         n_matrix[0][i] = read_int(read_next_input());
-        n_matrix[i][0] = read_int(read_next_input());
+        n_matrix[i][0] = n_matrix[0][i];
     }
     for (int i = 1; i < k+1; i++)
     {
         shortsPath_cmd(head, n_matrix[0][i], n_matrix[0][i]);
-        for (int j = 1; j < k+1; k++)
+        for (int j = 1; j < k+1; j++)
         {
             if (i==j)
             {
@@ -574,6 +633,83 @@ void TSP_cmd(pnode head)
         }
         
     }
+    //for (int i = 0; i < k+1; i++)
+    //{
+        //for (int j = 0; j < k+1; j++)
+        //{
+            //printf("%d, ", n_matrix[i][j]);
+        //}
+        //printf("\n");
+        
+    //}
     
+    int factorial_k = factorial(k);
+    int **permutations = (int**) malloc(factorial_k*sizeof(int*));
+    if (!permutations)
+    {
+        printf("error while malloc");
+    } 
+    for (int i = 0; i < factorial_k; i++)
+    {
+        permutations[i] = (int*) malloc(k*sizeof(int));
+        if (!permutations[i])
+        {
+            printf("error while malloc");
+        }
+        
+    }
+    int permutation_num = 0;
+    create_permutations_rec(&(n_matrix[0][1]), 0, k-1, permutations, &permutation_num);
+    int min_path = __INT_MAX__;
+    int cur_path=0;
+    int path = 0;
+    int *the_nodes = (int*) malloc(sizeof(int)*k);
+    for (int i = 0; i < k; i++)
+    {
+        the_nodes[i] = n_matrix[0][i+1];
+    }
     
+    for (int i = 0; i < factorial_k; i++)
+    {
+        cur_path=0;
+        for (int j=0; j < k-1; j++)
+        {
+            cur_path+=n_matrix[find_index(permutations[i][j], the_nodes, k)][find_index(permutations[i][j+1], the_nodes, k)];
+            if (cur_path>=__INT_MAX__/2 || cur_path<=0)
+            {
+                j=k-1;
+            }
+            
+        }
+        if (cur_path<__INT_MAX__/2 && cur_path>0)
+        {
+            path = 1;
+            if (min_path>cur_path)
+            {
+                min_path = cur_path;
+            }
+            
+        }
+    }
+    free(the_nodes);
+    if (path) 
+    {
+    printf("TSP shortest path: %d \n", min_path);
+    } 
+    else 
+    {
+    printf("TSP shortest path: %d \n", -1);
+    }
+    for (int i = 0; i < factorial_k; i++) 
+    {
+        free(permutations[i]);
+    }
+    free(permutations);
+    for (int i = 0; i < k + 1; i++) 
+    {
+        free(n_matrix[i]);
+    }
+    free(n_matrix);
+        
 }
+    

@@ -28,7 +28,7 @@ char* read_next_input();
 int is_cmd(char* str);
 char get_cmd(char* str);
 int read_int(char* str);
-int exists(pnode *head, int node);
+int exists(pnode head, int node);
 void create_node(pnode *head, int node_num);
 pnode find_node(pnode *head, int node_num);
 char* insert_new_node(pnode *head, int node_num);
