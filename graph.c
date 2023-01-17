@@ -535,10 +535,8 @@ void dijkstra_from_source(pnode source)
     
 }
 
-int shortsPath_cmd(pnode head)
+int shortsPath_cmd(pnode head, int source, int destination)
 {
-    int source = read_int(read_next_input());
-    int destination = read_int(read_next_input());
     initialize_Dijkstra_distance(head, source);
     pnode src = find_node(&head, source);
     dijkstra_from_source(src);
@@ -548,5 +546,34 @@ int shortsPath_cmd(pnode head)
 
 void TSP_cmd(pnode head)
 {
-
+    int k = read_int(read_next_input());
+    int **n_matrix = (int**) calloc(k+1, sizeof(int*));
+    for (int i = 0; i < k+1; i++)
+    {
+        n_matrix[i] = (int*) calloc((k+1),sizeof(int));
+    }
+    for (int i = 1; i < k+1; i++)
+    {
+        n_matrix[0][i] = read_int(read_next_input());
+        n_matrix[i][0] = read_int(read_next_input());
+    }
+    for (int i = 1; i < k+1; i++)
+    {
+        shortsPath_cmd(head, n_matrix[0][i], n_matrix[0][i]);
+        for (int j = 1; j < k+1; k++)
+        {
+            if (i==j)
+            {
+                continue;
+            }
+            else 
+            {
+                n_matrix[i][j] = find_node(&head, n_matrix[0][j])->Dijkstra_distance;
+            }
+            
+        }
+        
+    }
+    
+    
 }

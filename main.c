@@ -32,7 +32,9 @@ int main()
         }
         if (cmd=='S')
         {
-            int dijkstra_dist_of_dest = shortsPath_cmd(p);
+            int source = read_int(read_next_input());
+            int destination = read_int(read_next_input());
+            int dijkstra_dist_of_dest = shortsPath_cmd(p, source, destination);
             if (dijkstra_dist_of_dest!=__INT_MAX__/2)
             {
                 printf("Dijsktra shortest path: %d \n", dijkstra_dist_of_dest);
