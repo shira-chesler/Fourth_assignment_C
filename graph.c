@@ -28,13 +28,14 @@ char* read_next_input()
             {
                 return NULL; //problem with realloc
             }
-            free(pointer);
             pointer = new;
             available_space = RESIZE_SIZE;
         }
         pointer[place_in_array] = cur;
         available_space--;
         place_in_array++;
+        cur = fgetc(stdin);
+
     }
     pointer[place_in_array] = '\0';
     return pointer;
@@ -64,29 +65,40 @@ char get_cmd(char* str)
 {
     if (strlen(str)==0)
     {
+        free(str);
         return 'Z';
     }
     else
     {
-        return str[0];
+        char a= str[0];
+        free(str);
+        return a;
     }
     
 }
 
 int read_int(char* str)
 {
-    return atoi(str);
+    int x = 0;
+    //x = atoi(str);
+    sscanf(str,"%d",&x);
+    //x = str[0]-'0';
+    free(str);
+    return x;
 }
 
 int exists(pnode *head, int node)
 {
     pnode* cur_node = head;
-    while ((*cur_node)->next)
+    int i = 1;
+    while ((*cur_node))
     {
         if ((*cur_node)->node_num==node)
         {
-            return 1;
+            return i;
         }
+        i++;
+        cur_node = &((*cur_node)->next);
         
     }
     return 0;
@@ -106,18 +118,21 @@ void create_node(pnode *head, int node_num)
     }
     
     to_node->node_num = node_num;
+    to_node->edges = NULL;
+    to_node->Dijkstra_distance = __INT_MAX__;
     (*cur_node)->next = to_node;
 }
 
 pnode find_node(pnode *head, int node_num)
 {
     pnode* cur_node = head;
-    while ((*cur_node)->next)
+    while (*cur_node)
     {
         if ((*cur_node)->node_num==node_num)
         {
             return *cur_node;
         }
+        cur_node=&((*cur_node)->next);
         
     }
     return NULL;
@@ -126,7 +141,11 @@ pnode find_node(pnode *head, int node_num)
 char* insert_new_node(pnode *head, int node_num)
 {
     pnode* cur_node = head;
-    while ((*cur_node)->next)
+    if (exists(head,node_num))
+    {
+        return insert_edges(find_node(head,node_num), head);
+    }
+    while ((*cur_node)!=NULL && (*cur_node)->next)
     {
         cur_node = &((*cur_node)->next);
     }
@@ -136,14 +155,23 @@ char* insert_new_node(pnode *head, int node_num)
         printf("error occured during malloc");
     }
     new_node->node_num = node_num;
-    (*cur_node)->next = new_node;
-    //*cur_node = &new_node;
+    new_node->next=NULL;
+    new_node->Dijkstra_distance = __INT_MAX__;
+    if (*cur_node==NULL)
+    {
+        *cur_node = new_node;
+    }
+    else
+    {
+        (*cur_node)->next = new_node;
+    }
     return insert_edges(new_node, head);
     
 }
 
 char build_graph_cmd(pnode *head)
 {
+    //0 2 3 n 5 2
     char* cur_input = read_next_input();
     while (1)
     {
@@ -158,7 +186,8 @@ char build_graph_cmd(pnode *head)
         }
         else
         {
-            cur_input = read_next_input;
+            free(cur_input);
+            cur_input = read_next_input();
         }
     }
 }
@@ -167,7 +196,7 @@ void del_edges(pedge edges)
 {
     pedge cur=edges;
     pedge prev=NULL;
-    while (cur->next)
+    while (cur!=NULL && cur->next)
     {
         prev = cur;
         cur = cur->next;
@@ -176,13 +205,17 @@ void del_edges(pedge edges)
     free(cur);
 }
 
-char insert_edges(pnode node, pnode *head)
+char* insert_edges(pnode node, pnode *head)
 {
     pedge* cur_edge= NULL;
     char* cur_input = read_next_input();
     while (1)
     {
         if (is_cmd(cur_input))
+        {
+            return cur_input;
+        }
+        if (cur_input[0]=='n')
         {
             return cur_input;
         }
@@ -197,29 +230,33 @@ char insert_edges(pnode node, pnode *head)
                 {
                     printf("error occured during malloc");
                 }
+                new_edge->next=NULL;
                 new_edge->weight = weight;
-                if (!exists(head, other_node)) //!!!!!!!!!
+                if (!exists(head, other_node)) 
                 {
-                    create_node(head, other_node); //!!!!!!!!!
+                    create_node(head, other_node); 
                 }
-                new_edge->endpoint = find_node(head, other_node); //!!!!!!!!!
-                cur_edge = &new_edge;
-                node->edges = &new_edge;
+                new_edge->endpoint = find_node(head, other_node); 
+                node->edges = new_edge;
+                cur_edge = &(node->edges);
             }
-            pedge new_edge = (pedge)malloc(sizeof(edge));
-            if (!new_edge)
+            else
             {
-                printf("error occured during malloc");
+                pedge new_edge = (pedge)malloc(sizeof(edge));
+                if (!new_edge)
+                {
+                    printf("error occured during malloc");
+                }
+                new_edge->next=NULL;
+                new_edge->weight = weight;
+                if (!exists(head, other_node)) 
+                {
+                    create_node(head, other_node);
+                }
+                new_edge->endpoint = find_node(head, other_node);
+                (*cur_edge)->next= new_edge;
+                cur_edge = &((*cur_edge)->next);
             }
-            
-            new_edge->weight = weight;
-            if (!exists(head, other_node)) 
-            {
-                create_node(*head, other_node);
-            }
-            new_edge->endpoint = find_node(head, other_node);
-            (*cur_edge)->next= new_edge;
-            cur_edge = &new_edge;
             
         }
         cur_input = read_next_input();
@@ -229,24 +266,87 @@ char insert_edges(pnode node, pnode *head)
 char insert_node_cmd(pnode *head)
 {
     int node_value = read_int(read_next_input());
-    if (exist(head, node_value))
+    if (exists(head, node_value))
     {
         pnode nodepointer = find_node(head, node_value);
         del_edges(nodepointer->edges);
-        return insert_edges(nodepointer, head);
+        return get_cmd(insert_edges(nodepointer, head));
     }
     else
     {
-        return insert_new_node(head, node_value);
+        return get_cmd(insert_new_node(head, node_value));
     }
     
     
 }
 
-void delete_node_cmd(pnode *head)
+void delete_edge_to_node(pnode node, int node_num_to_delete_edge_to)
 {
+    pedge cur = node->edges;
+    pedge prev = node->edges;
+    while (cur)
+    {
+        if (cur->endpoint->node_num==node_num_to_delete_edge_to)
+        {
+            if (cur==prev)
+            {
+                node->edges=cur->next;
+                cur->next=NULL;
+                cur->weight=0;
+            }
+            else
+            {
+                prev->next = cur->next;
+            }
+            free(cur);
+            break;
+        }
+        prev = cur;
+        cur = cur->next;
+    }
     
 }
+
+void delete_node_cmd(pnode *head)
+{
+    int value = read_int(read_next_input());
+    int placement_in_graph = exists(head, value);
+    pnode cur = *head;
+    while (cur)
+    {
+        if (cur->node_num==value)
+        {
+            cur = cur->next;
+            continue;
+        }
+        delete_edge_to_node(cur, value);
+        cur = cur->next;
+    }
+    if ((*head)->node_num==value)
+    {
+        pnode to_delete = *head;
+        *head = (*head)->next;
+        del_edges((to_delete)->edges);
+        free(to_delete);
+    }
+    else
+    {
+        int i=2;
+        pnode prev = *head;
+        pnode cur = prev->next;
+        while (i<placement_in_graph)
+        {
+            prev = cur;
+            cur = cur->next;
+            i++;
+        }
+        prev->next = cur->next;
+        del_edges(cur->edges);
+        free(cur);
+        
+    } 
+}
+
 void printGraph_cmd(pnode head)
 {
     pnode cur = head;
@@ -257,8 +357,11 @@ void printGraph_cmd(pnode head)
         int i = 1;
         while(cure)
         {
-            printf("    Edge no' %d is to vertic %d, ant the weight is %d\n", i, cure->endpoint->node_num, cure->weight);
+            //printf("%d\n", cure->weight);
+            //printf("%d\n", cure->endpoint->node_num);
+            printf("    Edge no' %d; to vertic: %d, weight: %d\n", i, cure->endpoint->node_num, cure->weight);
             cure = cure->next;
+            i++;
         }
         cur = cur->next;
     }
@@ -284,10 +387,166 @@ void deleteGraph_cmd(pnode* head)
     rough_delete(*cur);
 }
 
-void shortsPath_cmd(pnode head)
+void initialize_Dijkstra_distance(pnode head, int source_value)
 {
-
+    pnode cur = head;
+    while (cur)
+    {
+        if (cur->node_num==source_value)
+        {
+            cur->Dijkstra_distance = 0;
+        }
+        else
+        {
+            cur->Dijkstra_distance = __INT_MAX__/2;
+        }
+        cur = cur->next;
+    }
+    
 }
+
+int in_queue(pqueue head_of_q, int node_to_check)
+{
+    
+    pqueue cur_pointer = head_of_q;
+    int i = 1;
+    while (cur_pointer)
+    {
+        if (cur_pointer->node_to->node_num==node_to_check)
+        {
+            return i;
+        }
+        i++;
+        cur_pointer = cur_pointer->next;
+        
+    }
+    return 0;
+}
+
+void remove_from_q(pqueue *head_of_queue,int placement_in_queue)
+{
+    if (placement_in_queue==1)
+    {
+        pqueue to_remove = *head_of_queue;
+        (*head_of_queue) = to_remove->next;
+        free(to_remove);
+    }
+    else
+    {
+        int i=2;
+        pqueue cur = (*head_of_queue)->next;
+        pqueue prev = (*head_of_queue);
+        while (i<placement_in_queue)
+        {
+            prev = cur;
+            cur = cur->next;
+            i++;
+        }
+        prev->next=cur->next;
+        free(cur);   
+    }
+    
+}
+
+
+void insert_to_priority_q(pqueue *head_of_q, pnode node_to_insert)
+{
+    pqueue* cur = head_of_q;
+    if (!(*cur)) //q is empty
+    {
+        pqueue first = (pqueue) malloc(sizeof(queue));
+        if (!first)
+        {
+            printf("problem during malloc");
+            return;
+        }
+        (*head_of_q) = first;
+        first->next = NULL;
+        first->node_to = node_to_insert;
+    }
+    else
+    {
+        int placement_in_queue = in_queue((*cur), node_to_insert->node_num);
+        if (placement_in_queue)
+        {
+            remove_from_q(head_of_q, placement_in_queue);
+        }
+        pqueue new = (pqueue) malloc(sizeof(queue));
+        if (!new)
+        {
+            printf("problem during malloc");
+            return;
+        }
+        new->next = NULL;
+        new->node_to = node_to_insert;
+        pqueue curcur = (*cur);
+        pqueue prev = (*cur);
+        while (curcur!=NULL && new->node_to->Dijkstra_distance>=curcur->node_to->Dijkstra_distance)
+        {
+            prev = curcur;
+            curcur = curcur->next;
+        }
+        if ((*cur)==prev)//need to insert at head of q, cur==head_of_q
+        {
+            *cur=new;
+            new->next = prev;
+        }
+        else
+        {
+            prev->next = new;
+            new->next = curcur;
+        } 
+    }
+    
+}
+
+void dijkstra_from_source(pnode source)
+{
+    //pnode cur = source;
+    pedge cur_edge = source->edges;
+    pqueue q = NULL;
+    while (cur_edge)
+    {
+        if (cur_edge->endpoint->Dijkstra_distance>source->Dijkstra_distance+cur_edge->weight)
+        {
+            cur_edge->endpoint->Dijkstra_distance = source->Dijkstra_distance+cur_edge->weight;
+            insert_to_priority_q(&q, cur_edge->endpoint);//
+        }
+        cur_edge = cur_edge->next;
+    }
+    pqueue cur = q;
+    pqueue prev = NULL;
+    while (cur)
+    {
+        cur_edge = cur->node_to->edges;
+        while (cur_edge)
+        {
+            if (cur_edge->endpoint->Dijkstra_distance>cur->node_to->Dijkstra_distance+cur_edge->weight)
+            {
+                cur_edge->endpoint->Dijkstra_distance = cur->node_to->Dijkstra_distance+cur_edge->weight;
+                insert_to_priority_q(&q, cur_edge->endpoint);
+            }
+            cur_edge = cur_edge->next;
+        }
+        prev = cur;
+        cur = cur->next;
+        remove_from_q(&q, in_queue(q, prev->node_to->node_num));//
+    }
+    
+    
+}
+
+int shortsPath_cmd(pnode head)
+{
+    int source = read_int(read_next_input());
+    int destination = read_int(read_next_input());
+    initialize_Dijkstra_distance(head, source);
+    pnode src = find_node(&head, source);
+    dijkstra_from_source(src);
+    int dijkstra_of_dest = find_node(&head, destination)->Dijkstra_distance;
+    return dijkstra_of_dest;    
+}
+
 void TSP_cmd(pnode head)
 {
 
