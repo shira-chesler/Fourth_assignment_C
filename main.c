@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include "graph.h"
+#include <stdlib.h>
 
 int main()
 {
     char* cur;
     cur = read_next_input();
     char cmd = get_cmd(cur);
-    
     pnode p=NULL;
     while (cmd != 'Z')
     {
@@ -54,5 +54,7 @@ int main()
         //printf("%c\n",cmd);
         
     }
+    deleteGraph_cmd(&p);
+    return 0;
     
 }

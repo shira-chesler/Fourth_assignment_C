@@ -157,7 +157,7 @@ char* insert_new_node(pnode *head, int node_num)
     new_node->node_num = node_num;
     new_node->next=NULL;
     new_node->Dijkstra_distance = __INT_MAX__;
-    if (*head==NULL)
+    if ((*head)==NULL) //cur_node==NULL
     {
         *head = new_node;
     }
@@ -182,6 +182,7 @@ char build_graph_cmd(pnode *head)
         if (cur_input[0]=='n')
         {
             int main_node = read_int(read_next_input());
+            free(cur_input);
             cur_input = insert_new_node(head, main_node);
         }
         else
@@ -376,15 +377,16 @@ void rough_delete(pnode pointer)
 
 void deleteGraph_cmd(pnode* head)
 {
-    pnode *cur = head;
-    pnode *prev;
-    while ((*cur)->next)
+    pnode cur = *head;
+    pnode prev;
+    while (cur->next)
     {
         prev = cur;
-        cur = &((*cur)->next);
-        rough_delete(*prev);
+        cur = cur->next;
+        rough_delete(prev);
     }
-    rough_delete(*cur);
+    rough_delete(cur);
+    *head = NULL;
 }
 
 void initialize_Dijkstra_distance(pnode head, int source_value)
@@ -531,7 +533,7 @@ void dijkstra_from_source(pnode source)
         cur = cur->next;
         remove_from_q(&q, in_queue(q, prev->node_to->node_num));//
     }
-    
+    free(q);
     
 }
 
